@@ -73,8 +73,8 @@ async def main():
 
     while True:
         # Simulate GPS coordinates
-        unit_service = UnitService()
-        unit_service.update_gps_location()
+        # unit_service = UnitService()
+        # unit_service.update_gps_location()
 
         # read x and y from unit_info.json file
         with open("ert/unit_info.json", "r") as f:
