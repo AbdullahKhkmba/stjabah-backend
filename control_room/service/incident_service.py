@@ -87,13 +87,14 @@ class IncidentService:
         Returns:
             True if incident was deleted successfully, False if incident was not found
         """
-        # incident = self.incident_repository.get_by_id(incident_id)
+        incident = self.incident_repository.get_by_id(incident_id)
 
-        # if incident is not None:
-        #     await self.communication_channel.publish(
-        #         topic="new_incident",
-        #         message={}
-        #     )
+        if incident is not None:
+            await self.communication_channel.publish(
+                topic="new_incident",
+                message={}
+            )
+            
         return self.incident_repository.delete(incident_id)
     
     def get_open_incidents(self) -> List[Incident]:

@@ -93,7 +93,7 @@ def create_incident():
         }), 500
     
 @control_room_bp.route('/incidents/<incident_id>', methods=['DELETE'])
-def delete_incident(incident_id):
+async def delete_incident(incident_id):
     """
     Delete an incident from the system
     
@@ -103,13 +103,19 @@ def delete_incident(incident_id):
     Returns:
         200: Incident deleted successfully with success message
         404: Incident not found with error message
-    """
-    deleted = control_room_bp.incident_service.delete_incident(incident_id)
-    
-    if not deleted:
-        return jsonify({"error": "Incident not found"}), 404
-    
-    return jsonify({"message": "Incident deleted successfully"}), 200
+    """    
+    try:
+        # We MUST await the service call because it is an async def
+        deleted = await control_room_bp.incident_service.delete_incident(incident_id)
+        return jsonify({"message": "Incident deleted successfully"}), 200
+
+    except ValueError as e:
+        # Catch the "Incident does not exist" error from your service
+        return jsonify({'error': str(e)}), 404
+
+    except Exception as e:
+        logger.error(f"Error deleting incident {incident_id}: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @control_room_bp.route('/incidents/<incident_id>', methods=['PUT'])
 async def update_incident(incident_id):
