@@ -35,7 +35,17 @@ async def on_new_incident(data):
 
     print(f"\n[ERT-{ert_id}] 🚨 RECEIVED INCIDENT: {data}")
     print(f"[ERT-{ert_id}] Preparing vehicle...")
-
+    
+    # # handle the case where the send incident is empty (when an incident is deleted)
+    # if not data:
+    #     print(f"[ERT-{ert_id}] Incident deleted. Clearing assigned incident and updating status.")
+    #     unit_info["assigned_incident"] = None
+    #     unit_info["status"] = "available"
+    #     with open("ert/unit_info.json", "w") as f:
+    #         json.dump(unit_info, f, indent=4)
+    #     print(f"[ERT-{ert_id}] Updated unit info to available with no assigned incident.")
+    #     return
+    
     incident_id = data.get("id")
 
     unit_info["assigned_incident"] = data

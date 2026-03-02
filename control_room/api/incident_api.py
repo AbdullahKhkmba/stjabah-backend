@@ -1,4 +1,5 @@
 """API handlers for Control Room incident endpoints"""
+from control_room.model import incident
 from flask import Blueprint, request, jsonify
 import logging
 import asyncio
@@ -122,7 +123,7 @@ def delete_incident(incident_id):
     return jsonify({"message": "Incident deleted successfully"}), 200
 
 @control_room_bp.route('/incidents/<incident_id>', methods=['PUT'])
-def update_incident(incident_id):
+async def update_incident(incident_id):
     """
     Update incident coordinates
     Args:
@@ -158,14 +159,21 @@ def update_incident(incident_id):
         }), 400
     
     try:
-        incident = control_room_bp.incident_service.update_incident(incident_id, data['x'], data['y'])
+        # We MUST await the service call because it is an async def
+        incident = await control_room_bp.incident_service.update_incident(
+            incident_id, 
+            data['x'], 
+            data['y']
+        )
         return jsonify(incident.to_dict()), 200
+
+    except ValueError as e:
+        # Catch the "Incident does not exist" error from your service
+        return jsonify({'error': str(e)}), 404
 
     except Exception as e:
         logger.error(f"Error updating incident {incident_id}: {str(e)}")
-        return jsonify({
-            'error': 'Internal server error'
-        }), 500
+        return jsonify({'error': 'Internal server error'}), 500
     
 @control_room_bp.route('/incidents/dispatch', methods=['POST'])
 def dispatch_incident():
