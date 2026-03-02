@@ -38,17 +38,20 @@ class IncidentService:
             y: New y coordinate
         """
         incident = self.incident_repository.get_by_id(incident_id)
+
         if not incident:
             raise ValueError(f"Incident with ID {incident_id} does not exist.")
+        
         incident.x = x
         incident.y = y
         updated_incident = self.incident_repository.update(incident)
 
-        # Notify ERT units about the updated incident
-        await self.communication_channel.publish(
-            topic="new_incident",
-            message=updated_incident.to_dict()
-        )
+        if incident.status != IncidentStatus.CREATED:
+            # Notify ERT units about the updated incident
+            await self.communication_channel.publish(
+                topic="active_incident",
+                message=updated_incident.to_dict()
+            )
 
         return updated_incident
 
@@ -68,10 +71,11 @@ class IncidentService:
         incident = self.incident_repository.get_by_id(incident_id)
 
         if incident is not None:
-            await self.communication_channel.publish(
-                topic="new_incident",
-                message={}
-            )
+            if incident.status != IncidentStatus.CREATED:
+                await self.communication_channel.publish(
+                    topic="active_incident",
+                    message={}
+                )
 
         return self.incident_repository.delete(incident_id)
 
