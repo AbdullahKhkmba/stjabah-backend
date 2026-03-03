@@ -123,7 +123,7 @@ class IncidentService:
         
         return updated_incident
 
-    def resolve_incident(self, incident_id: str):
+    async def resolve_incident(self):
         """
         Mark an incident as resolved
         
@@ -133,11 +133,16 @@ class IncidentService:
         Returns:
             Updated incident object
         """
-        incident = self.incident_repository.get_by_id(incident_id)
+        incident = self.get_open_incidents()[0] if self.get_open_incidents() else None
         if not incident:
-            raise ValueError(f"Incident with ID {incident_id} does not exist.")
+            raise ValueError(f"Incident with ID {incident.id} does not exist.")
         
         incident.status = IncidentStatus.RESOLVED
         updated_incident = self.incident_repository.update(incident)
+
+        await self.communication_channel.publish(
+            topic="active_incident",
+            message={}
+        )
         
         return updated_incident

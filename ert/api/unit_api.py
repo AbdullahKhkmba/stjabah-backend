@@ -94,10 +94,17 @@ def get_incident_location():
     try:
         with open("ert/unit_info.json", "r") as f:
             unit_info = json.load(f)
-            location = {
-                "x": unit_info["assigned_incident"]["x"],
-                "y": unit_info["assigned_incident"]["y"]
-            }
+            if unit_info["assigned_incident"] is not None:
+                location = {
+                    "x": unit_info["assigned_incident"]["x"],
+                    "y": unit_info["assigned_incident"]["y"]
+                }
+            else:
+                location = {
+                    "x": None,
+                    "y": None
+                }
+                
         return jsonify(location), 200
     except Exception as e:
         logger.error(f"Error retrieving incident location: {str(e)}")

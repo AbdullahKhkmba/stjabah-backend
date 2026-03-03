@@ -3,6 +3,10 @@
 Handlers moved out of the service layer to a dedicated module so
 the communication layer can subscribe to them directly.
 """
+from asyncio.log import logger
+
+from flask import jsonify
+
 from control_room.model.incident import IncidentStatus
 from typing import Any
 from control_room.model.unit import UnitStatus
@@ -70,8 +74,15 @@ class WebSocketHandlers:
                                 for u in assigned_units
                             )
                             if all_resolved:
-                                incident.status = IncidentStatus.RESOLVED
-                                self.incident_repository.update(incident)
+                                try:
+                                    # We MUST await the service call because it is an async def
+                                    incident = await self.incident_service.resolve_incident()
+                                except ValueError as e:
+                                    # Catch the "Incident does not exist" error from your service
+                                    logger.error(f"Error resolving incident {incident_id}: {str(e)}")
+                                except Exception as e:
+                                    logger.error(f"Error updating incident {incident_id}: {str(e)}")
+
                                 print(f"[Control Room] \U0001f389 Incident {incident.id} resolved (all units resolved)")
                             else:
                                 print(f"[Control Room] \U0001f6a7 Incident {incident.id} still in progress (some units not resolved)")
