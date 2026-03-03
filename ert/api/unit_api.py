@@ -93,25 +93,17 @@ def get_incident_location():
     try:
         with open("ert/unit_info.json", "r") as f:
             unit_info = json.load(f)
-<<<<<<< feature/late_ert_joiners
             if unit_info["assigned_incident"] is not None:
                 location = {
-                    "x": unit_info["assigned_incident"]["x"],
-                    "y": unit_info["assigned_incident"]["y"]
+                    "lat": unit_info["assigned_incident"]["lat"],
+                    "lng": unit_info["assigned_incident"]["lng"]
                 }
             else:
-                location = {
-                    "x": None,
-                    "y": None
-                }
-                
-=======
-            location = {
-                "lat": unit_info["assigned_incident"]["lat"],
-                "lng": unit_info["assigned_incident"]["lng"]
-            }
->>>>>>> main
+                return jsonify({
+                    'error': 'No incident assigned to this unit'
+                }), 400
         return jsonify(location), 200
+    
     except Exception as e:
         logger.error(f"Error retrieving incident location: {str(e)}")
         return jsonify({
