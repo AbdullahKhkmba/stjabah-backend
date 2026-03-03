@@ -117,7 +117,7 @@ class UnitService:
                     for u in assigned_units
                 )
                 if all_resolved:
-                    self.incident_service.resolve_incident(incident_id)
+                    self.incident_service.resolve_incident()
                     print(f"[Control Room] \U0001f389 Incident {incident.id} resolved (all units resolved)")
                 else:
                     print(f"[Control Room] \U0001f6a7 Incident {incident.id} still in progress (some units not resolved)")

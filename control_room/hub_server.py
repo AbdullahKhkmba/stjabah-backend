@@ -8,13 +8,15 @@ subscriptions = defaultdict(set)
 connected_clients = set()
 client_info = {}  # websocket -> {'type': 'cr'/'ert', 'id': str}
 websocket_handlers = None  # Will be set by cr_main.py
+active_incident = None  # Global variable to hold the current active incident state
 
 async def handler(websocket):
     print(f"Client connected: {websocket.remote_address}")
     connected_clients.add(websocket)
     client_id = None
     client_type = None
-    
+    global active_incident
+
     try:
         async for message in websocket:
             data = json.loads(message)
@@ -29,16 +31,28 @@ async def handler(websocket):
                 print(f"[HUB SERVER] - Client registered: {client_type.upper()} - {client_id}")
                 continue
 
-            # 1. Handle Subscription Requests
             if msg_type == "subscribe":
                 subscriptions[topic].add(websocket)
+                
+                if topic == "active_incident" and active_incident:
+                    try:
+                        print("[HUB SERVER] - Sending current active incident to new subscriber")
+                        await websocket.send(json.dumps({
+                            "topic": topic,
+                            "payload": active_incident
+                        }))
+                    except TypeError as e:
+                        print(f"[HUB SERVER] - ERROR: Failed to serialize active_incident: {e}")
+
                 print(f"[HUB SERVER] - Client subscribed to '{topic}'")
 
             # 2. Handle Publish Requests
             elif msg_type == "publish":
                 payload = data.get("payload")
                 print(f"[HUB SERVER] - Broadcasting message on '{topic}': {payload}")
-                
+                if topic == "active_incident":
+                    active_incident = payload  # Update the active incident state
+
                 # Forward the message to everyone subscribed to this topic
                 # EXCLUDING the sender (optional, usually desired)
                 if topic in subscriptions:
